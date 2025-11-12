@@ -23,7 +23,9 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // ====================================================================
     // 회원가입
+    // ====================================================================
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest req) {
         return ResponseEntity.status(201).body(authService.signupDto(req));
@@ -40,13 +42,17 @@ public class AuthController {
         return ResponseEntity.ok(authService.verifySignupEmailDto(req));
     }
 
+    // ====================================================================
     // 로그인
+    // ====================================================================
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.loginDto(req));
     }
 
+    // ====================================================================
     // 토큰 재발급
+    // ====================================================================
     @PostMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refresh(
             @RequestHeader(value = "Authorization", required = false) String authorization,
@@ -71,7 +77,9 @@ public class AuthController {
         return null;
     }
 
+    // ====================================================================
     // 로그아웃
+    // ====================================================================
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(Authentication authentication) {
         if (authentication == null || authentication.getCredentials() == null) {
@@ -83,6 +91,9 @@ public class AuthController {
         return ResponseEntity.ok(LogoutResponse.success());
     }
 
+    // ====================================================================
+    // 토큰으로 유저ID 추출
+    // ====================================================================
     @SuppressWarnings("unchecked")
     private Long extractUid(Object details) {
         if (details instanceof Map<?, ?> map) {
@@ -93,7 +104,9 @@ public class AuthController {
         throw AuthApiException.of(AuthErrorCode.INVALID_ACCESS_TOKEN);
     }
 
+    // ====================================================================
     // 강제 로그아웃(토큰 없이)
+    // ====================================================================
     @PostMapping("/force-logout")
     public ResponseEntity<ForceLogoutResponse> forceLogout(@Valid @RequestBody ForceLogoutRequest req) {
         authService.forceLogoutWithoutToken(req);
