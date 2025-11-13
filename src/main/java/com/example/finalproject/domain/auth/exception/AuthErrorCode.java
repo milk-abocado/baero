@@ -17,7 +17,6 @@ public enum AuthErrorCode {
     //로그아웃
     ALREADY_LOGGED_OUT(HttpStatus.CONFLICT, "이미 로그아웃된 세션입니다."),
 
-
     // 토큰 갱신
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "잘못된 리프레시 토큰"),
     REFRESH_TOKEN_EXPIRED(HttpStatus.GONE, "리프레시 토큰 만료"),

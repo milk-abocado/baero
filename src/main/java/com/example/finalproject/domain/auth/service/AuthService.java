@@ -4,6 +4,10 @@ import com.example.finalproject.config.SessionIndexService;
 import com.example.finalproject.config.TokenProperties;
 import com.example.finalproject.config.TokenProvider;
 import com.example.finalproject.domain.auth.dto.request.*;
+import com.example.finalproject.domain.auth.dto.response.LoginResponse;
+import com.example.finalproject.domain.auth.dto.response.SignupResponse;
+import com.example.finalproject.domain.auth.dto.response.TokenResponse;
+import com.example.finalproject.domain.auth.dto.response.VerifyEmailResponse;
 import com.example.finalproject.domain.auth.entity.SocialAccount;
 import com.example.finalproject.domain.auth.exception.AuthApiException;
 import com.example.finalproject.domain.auth.exception.AuthErrorCode;
@@ -77,6 +81,11 @@ public class AuthService {
         );
     }
 
+    // ===== DTO 버전 =====
+    public VerifyEmailResponse verifySignupEmailDto(EmailVerifyRequest req) {
+        return toVerifyEmailResponse(verifySignupEmail(req));
+    }
+
     // ====================================================================
     // 회원가입
     // ====================================================================
@@ -99,6 +108,11 @@ public class AuthService {
                 .build();
 
         return userRepository.save(u);
+    }
+
+    // ===== DTO 버전 =====
+    public SignupResponse signupDto(SignupRequest req) {
+        return SignupResponse.from(signup(req));
     }
 
     // ====================================================================
@@ -138,6 +152,10 @@ public class AuthService {
         }
     }
 
+    // ===== DTO 버전 =====
+    public LoginResponse loginDto(LoginRequest req) {
+        return toLoginResponse(login(req));
+    }
 
     // ====================================================================
     // 토큰 재발급 (Authorization 헤더/쿠키/바디 통해 전달된 refresh)
@@ -201,6 +219,14 @@ public class AuthService {
         );
     }
 
+    // ===== DTO 버전 =====
+    public TokenResponse refreshDto(TokenRefreshRequest req) {
+        return refreshDto(req.getRefreshToken());
+    }
+    public TokenResponse refreshDto(String refreshToken) {
+        return toTokenResponse(refresh(refreshToken));
+    }
+
     // ====================================================================
     // 로그아웃
     // ====================================================================
@@ -244,11 +270,10 @@ public class AuthService {
         }
 
         // 2) 현재 활성 sid 확인 (토큰이 없거나 sid를 못 뽑은 경우도 커버)
-        String currentSid = sidStore.get(userId); // 네가 이미 사용 중인 API
+        String currentSid = sidStore.get(userId);
         if (currentSid == null || currentSid.isBlank()) {
             // “이미 로그아웃” 정책: 차단하려면 예외, 멱등으로 운영하려면 return;
             throw AuthApiException.of(AuthErrorCode.ALREADY_LOGGED_OUT);
-            // 멱등 원하면 위 줄 대신: return;
         }
 
         // 3) 토큰이 왔는데 다른 세션의 sid라면(희귀 케이스) 방어
@@ -310,6 +335,12 @@ public class AuthService {
         return tokenResponse(access, refresh, u, /*social*/ true, info.getProvider());
     }
 
+    // ===== DTO 버전 =====
+    @Transactional
+    public LoginResponse socialLoginByAccessTokenDto(SocialProviderLoginRequest req) {
+        return toLoginResponse(socialLoginByAccessToken(req));
+    }
+
     // ====================================================================
     // 내부 유틸
     // ====================================================================
@@ -349,7 +380,44 @@ public class AuthService {
         // 3) 세션/리프레시 모두 제거 (idempotent)
         tokenStore.revokeRefresh(u.getId());  // 저장된 refresh 제거
         sidStore.evict(u.getId());            // 현재 sid 제거
-
     }
 
+    // ── Map → DTO 변환 유틸 ─────────────────────────────────────────────
+    private LoginResponse toLoginResponse(Map<String, Object> m) {
+        LoginResponse.UserSummary userSummary = null;
+        Object userObj = m.get("user");
+        if (userObj instanceof Map<?, ?> um) {
+            Long userId = (um.get("user_id") instanceof Number n) ? n.longValue() : null;
+            String role = (um.get("role") != null) ? um.get("role").toString() : null;
+            userSummary = LoginResponse.UserSummary.builder()
+                    .userId(userId)
+                    .role(role)
+                    .build();
+        }
+        return LoginResponse.builder()
+                .accessToken((String) m.get("access_token"))
+                .refreshToken((String) m.get("refresh_token"))
+                .tokenType((String) m.get("token_type"))
+                .expiresIn(((Number) m.getOrDefault("expires_in", 0)).longValue())
+                .socialLogin(Boolean.TRUE.equals(m.get("social_login")))
+                .provider(m.get("provider") != null ? m.get("provider").toString() : null)
+                .user(userSummary)
+                .build();
+    }
+
+    private TokenResponse toTokenResponse(Map<String, Object> m) {
+        return TokenResponse.builder()
+                .accessToken((String) m.get("access_token"))
+                .refreshToken((String) m.get("refresh_token"))
+                .tokenType((String) m.get("token_type"))
+                .expiresIn(((Number) m.getOrDefault("expires_in", 0)).longValue())
+                .build();
+    }
+
+    private VerifyEmailResponse toVerifyEmailResponse(Map<String, Object> m) {
+        return VerifyEmailResponse.builder()
+                .verifiedToken((String) m.get("verifiedToken"))
+                .expiresIn(((Number) m.getOrDefault("expiresIn", 0)).intValue())
+                .build();
+    }
 }
