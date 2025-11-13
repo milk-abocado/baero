@@ -36,7 +36,11 @@ public enum AuthErrorCode {
 
     // 소셜 가입
     SOCIAL_PARAM_INVALID(HttpStatus.BAD_REQUEST, "파라미터가 올바르지 않습니다."),
-    SOCIAL_PROVIDER_DUPLICATE(HttpStatus.CONFLICT, "(provider, provider_id) 중복");
+    SOCIAL_PROVIDER_DUPLICATE(HttpStatus.CONFLICT, "(provider, provider_id) 중복"),
+
+    // 관리자 권한
+    BLOCKED_USER(HttpStatus.BAD_REQUEST, "차단된 유저 입니다."),
+    UNBLOCKED_USER(HttpStatus.BAD_REQUEST, "이미 차단 해제된 유저입니다.");
 
     public final HttpStatus status;
     public final String defaultMessage;

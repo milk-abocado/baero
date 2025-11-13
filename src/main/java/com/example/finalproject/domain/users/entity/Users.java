@@ -1,5 +1,7 @@
 package com.example.finalproject.domain.users.entity;
 
+import com.example.finalproject.domain.auth.exception.AuthApiException;
+import com.example.finalproject.domain.auth.exception.AuthErrorCode;
 import com.example.finalproject.domain.users.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -111,6 +113,10 @@ public class Users {
      * 사용자를 차단 상태로 변경합니다.
      */
     public void block() {
+        if (this.blocked) {
+            // IllegalStateException 대신 정의된 ErrorCode를 사용하여 예외 발생
+            throw AuthApiException.of(AuthErrorCode.BLOCKED_USER);
+        }
         this.blocked = true;
     }
 
@@ -118,7 +124,13 @@ public class Users {
      * 사용자의 차단을 해제하고 활성 상태로 변경합니다.
      */
     public void unblock() {
+        if (!this.blocked) {
+            // 차단 해제 상태를 위한 별도 에러코드가 있다면 사용
+            // 여기서는 임시로 같은 BLOCKED_USER 코드를 사용하거나,
+            // 새롭게 UNBLOCKED_USER 같은 코드를 정의할 수 있습니다.
+            throw AuthApiException.of(AuthErrorCode.UNBLOCKED_USER);
+        }
         this.blocked = false;
     }
-    // ------------------------------------
 }
+

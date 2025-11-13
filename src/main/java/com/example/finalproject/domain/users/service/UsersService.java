@@ -54,7 +54,6 @@ public class UsersService {
             if (!v.equals(user.getZipCode())) user.changeZipCode(v);
         }
 
-        // @Transactional + dirty checking
         return UserDetailResponse.from(user);
     }
 
