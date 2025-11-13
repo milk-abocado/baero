@@ -18,16 +18,13 @@ public class Users {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Column(nullable = false, unique = true, length = 100)
-
     private String email;
 
     @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, length = 100)
-
     private String name;
 
     @Column(nullable = false, length = 100)
@@ -46,6 +43,11 @@ public class Users {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 
+    // --- [추가된 필드] 사용자 차단 상태 ---
+    @Column(name = "is_blocked", nullable = false)
+    private boolean blocked = false;
+    // ------------------------------------
+
     @Column(nullable = false, length = 100)
     private String address;
 
@@ -60,7 +62,7 @@ public class Users {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
+
     @Column(name = "allow_notifications", nullable = false)
     private Boolean allowNotifications = true;
 
@@ -95,15 +97,28 @@ public class Users {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 편의 getter (기존 코드 호환)
     public Long getUserId() { return id; }
     public String getUsername() { return email; }
 
-    // ==== 도메인 변경 메서드 ====
     public void changePassword(String encodedPassword) { this.password = encodedPassword; }
     public void changeNickname(String nickname)        { this.nickname = nickname; }
     public void changePhoneNumber(String phoneNumber)  { this.phoneNumber = phoneNumber; }
     public void changeAddress(String address)          { this.address = address; }
     public void changeAddressDetail(String detail)     { this.addressDetail = detail; }
     public void changeZipCode(String zipCode)          { this.zipCode = zipCode; }
+
+    /**
+     * 사용자를 차단 상태로 변경합니다.
+     */
+    public void block() {
+        this.blocked = true;
+    }
+
+    /**
+     * 사용자의 차단을 해제하고 활성 상태로 변경합니다.
+     */
+    public void unblock() {
+        this.blocked = false;
+    }
+    // ------------------------------------
 }
