@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ElasticSearchConfig {
 
-    @Value("${elasticsearch.ELASTICSEARCH_URL}")
+    @Value("${elasticsearch.ELASTICSEARCH_URL:${ELASTICSEARCH_URL}}")
     private String elasticsearchUrl;
 
     @Value("${elasticsearch.ELASTIC_API_KEY}")
